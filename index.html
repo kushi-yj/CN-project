@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Notice Relay Network | Campus DTN Simulation</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="brand-badge">
+                <span class="signal-dot pulsing"></span>
+                <span class="badge-text">OFFLINE-DTN v1.0</span>
+            </div>
+            <div class="title-group">
+                <h1>Offline Notice Relay Network</h1>
+                <p class="subtitle">Ad-Hoc Store-and-Forward Campus Mesh Simulation</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="network-status-chip">
+                <span class="chip-label">Network Mode:</span>
+                <span class="chip-val">📶🚫 Zero-Internet Mesh</span>
+            </div>
+            <button id="resetDemoBtn" class="btn btn-outline-danger btn-sm" title="Reset to default sample notices">
+                🔄 Reset Demo Data
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Navigation Bar -->
+    <nav class="main-tabs-bar">
+        <button class="nav-tab active" data-tab="tab-overview">
+            <span class="tab-icon">🌐</span>
+            <span>Live Topology & Relay Flow</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-teacher">
+            <span class="tab-icon">👨‍🏫</span>
+            <span>Teacher Console</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-students">
+            <span class="tab-icon">🎓</span>
+            <span>Student Notice Board</span>
+            <span id="unreadBadge" class="counter-badge">0</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-packets">
+            <span class="tab-icon">📋</span>
+            <span>Packet Inspector Logs</span>
+        </button>
+    </nav>
+
+    <!-- App Content Wrapper -->
+    <main class="app-container">
+
+        <!-- TAB 1: TOPOLOGY & RELAY SIMULATOR -->
+        <section id="tab-overview" class="tab-panel active">
+            <div class="info-banner">
+                <div class="info-icon">💡</div>
+                <div class="info-content">
+                    <strong>Computer Networks Concept: Delay-Tolerant Networking (DTN)</strong>
+                    <p>In an internet-blackout scenario, packets travel hop-by-hop through opportunistic classroom relay nodes. Each node buffers the notice (Store) and relays it to nearby nodes (Forward) until all student nodes receive it.</p>
+                </div>
+            </div>
+
+            <div class="card topology-card">
+                <div class="card-header">
+                    <div class="header-info">
+                        <h2>Multi-Hop Relay Topology</h2>
+                        <span class="tag-status">Live Interactive Canvas</span>
+                    </div>
+                    <div class="simulation-controls">
+                        <label class="control-label">Hop Latency: <span id="speedValue">900ms</span></label>
+                        <input type="range" id="hopSpeedRange" min="400" max="2500" value="900" step="100">
+                    </div>
+                </div>
+
+                <div class="topology-stage" id="topologyStage">
+                    <div id="simPacket" class="sim-packet" style="display: none;">
+                        <span class="packet-tag" id="packetTag">DATA</span>
+                    </div>
+
+                    <div class="network-nodes-flow">
+                        <!-- Node 0: Teacher -->
+                        <div class="node-wrapper" data-node="node-teacher">
+                            <div class="network-node active-node" id="visualNodeTeacher">
+                                <div class="node-avatar">📡</div>
+                            </div>
+                            <div class="node-meta">
+                                <strong>Teacher Node</strong>
+                                <span class="node-role">Packet Source (Origin)</span>
+                                <span class="node-ip">Addr: 192.168.1.10</span>
+                                <span class="node-status-badge badge-online">ACTIVE</span>
+                            </div>
+                        </div>
+
+                        <div class="network-link link-1" id="link-0-1">
+                            <span class="link-label">Hop 1</span>
+                        </div>
+
+                        <!-- Node 1: Classroom A -->
+                        <div class="node-wrapper" data-node="node-A">
+                            <div class="network-node relay-node" id="visualNodeA">
+                                <div class="node-avatar">🏫</div>
+                            </div>
+                            <div class="node-meta">
+                                <strong>Classroom A</strong>
+                                <span class="node-role">Relay Node #1</span>
+                                <span class="node-ip">Addr: 192.168.1.21</span>
+                                <button class="btn-toggle-node" onclick="toggleNodeState('A')">State: <span id="state-text-A">ONLINE</span></button>
+                            </div>
+                        </div>
+
+                        <div class="network-link link-2" id="link-1-2">
+                            <span class="link-label">Hop 2</span>
+                        </div>
+
+                        <!-- Node 2: Classroom B -->
+                        <div class="node-wrapper" data-node="node-B">
+                            <div class="network-node relay-node" id="visualNodeB">
+                                <div class="node-avatar">🏫</div>
+                            </div>
+                            <div class="node-meta">
+                                <strong>Classroom B</strong>
+                                <span class="node-role">Relay Node #2</span>
+                                <span class="node-ip">Addr: 192.168.1.35</span>
+                                <button class="btn-toggle-node" onclick="toggleNodeState('B')">State: <span id="state-text-B">ONLINE</span></button>
+                            </div>
+                        </div>
+
+                        <div class="network-link link-3" id="link-2-3">
+                            <span class="link-label">Hop 3</span>
+                        </div>
+
+                        <!-- Node 3: Classroom C -->
+                        <div class="node-wrapper" data-node="node-C">
+                            <div class="network-node relay-node" id="visualNodeC">
+                                <div class="node-avatar">🏫</div>
+                            </div>
+                            <div class="node-meta">
+                                <strong>Classroom C</strong>
+                                <span class="node-role">Relay Node #3</span>
+                                <span class="node-ip">Addr: 192.168.1.48</span>
+                                <button class="btn-toggle-node" onclick="toggleNodeState('C')">State: <span id="state-text-C">ONLINE</span></button>
+                            </div>
+                        </div>
+
+                        <div class="network-link link-4" id="link-3-4">
+                            <span class="link-label">Final Delivery</span>
+                        </div>
+
+                        <!-- Node 4: Students -->
+                        <div class="node-wrapper" data-node="node-students">
+                            <div class="network-node client-node" id="visualNodeStudents">
+                                <div class="node-avatar">📱</div>
+                            </div>
+                            <div class="node-meta">
+                                <strong>Student Devices</strong>
+                                <span class="node-role">Sink / End Terminals</span>
+                                <span class="node-ip">Broadcast: 192.168.1.255</span>
+                                <span class="node-status-badge badge-online">LISTENING</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Status Bar -->
+                <div class="relay-live-hud">
+                    <div class="hud-item">
+                        <span class="hud-label">Current Transmission:</span>
+                        <span class="hud-value" id="hudNoticeTitle">System Idle (Ready for transmission)</span>
+                    </div>
+                    <div class="hud-item">
+                        <span class="hud-label">Hop Progress:</span>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="hopProgressBar" style="width: 0%;"></div>
+                        </div>
+                        <span class="hud-sub" id="hopProgressText">0 / 4 Hops completed</span>
+                    </div>
+                    <div class="hud-item">
+                        <span class="hud-label">Relay Mode:</span>
+                        <span class="badge-mode">Opportunistic Store & Forward</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">📨</span>
+                    <div class="stat-info">
+                        <span class="stat-num" id="statTotalSent">0</span>
+                        <span class="stat-title">Notices Created</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">⚡</span>
+                    <div class="stat-info">
+                        <span class="stat-num" id="statUrgentCount">0</span>
+                        <span class="stat-title">Urgent Broadcasts</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">🔄</span>
+                    <div class="stat-info">
+                        <span class="stat-num" id="statRelayedCount">0</span>
+                        <span class="stat-title">Successful Hop Relays</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📥</span>
+                    <div class="stat-info">
+                        <span class="stat-num" id="statDeliveredCount">0</span>
+                        <span class="stat-title">Delivered to Students</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: TEACHER DASHBOARD -->
+        <section id="tab-teacher" class="tab-panel">
+            <div class="dashboard-split">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <h2>Broadcast Notice Over Offline Mesh</h2>
+                        <p class="section-desc">Create and inject an encrypted notice payload into the local classroom relay topology.</p>
+                    </div>
+
+                    <form id="noticeForm">
+                        <div class="form-group">
+                            <label for="noticeSender">Teacher Name & Designation <span class="required">*</span></label>
+                            <input type="text" id="noticeSender" placeholder="e.g., Prof. Sarah Jenkins (HOD - CSE)" required value="Prof. Sarah Jenkins (Dept. of CSE)">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="noticeTitle">Notice Title / Subject <span class="required">*</span></label>
+                            <input type="text" id="noticeTitle" placeholder="e.g., Immediate Lab Schedule Change for 5th Sem" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label for="noticePriority">Priority Level (QoS Tag)</label>
+                                <select id="noticePriority">
+                                    <option value="Normal">🟢 Normal Priority (Routine Info)</option>
+                                    <option value="Urgent">🔴 Urgent Priority (High Precedence)</option>
+                                </select>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label for="targetAudience">Target Audience</label>
+                                <select id="targetAudience">
+                                    <option value="All CSE Students">All CSE Students</option>
+                                    <option value="5th Semester CSE Only">5th Semester CSE Only</option>
+                                    <option value="Final Year Students">Final Year Students</option>
+                                    <option value="Faculty & Class Reps">Faculty & Class Reps</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="noticeMessage">Notice Message Payload <span class="required">*</span></label>
+                            <textarea id="noticeMessage" rows="5" placeholder="Type the complete announcement details here..." required></textarea>
+                        </div>
+
+                        <div class="packet-metadata-preview">
+                            <span class="preview-title">Simulated Packet Header Preview:</span>
+                            <code>[PROTO: DTN-RELAY] [TTL: 10] [CHECKSUM: 0x8F4E] [ENCRYPT: AES-Sim]</code>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" id="broadcastBtn">
+                            <span>📡 Transmit Notice Into Relay Network</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card history-card">
+                    <div class="card-header">
+                        <h2>Dispatched Notice History</h2>
+                        <span class="tag-status">Stored in LocalStorage</span>
+                    </div>
+                    <div class="dispatch-list" id="teacherHistoryList"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: STUDENT NOTICE BOARD -->
+        <section id="tab-students" class="tab-panel">
+            <div class="card student-board-card">
+                <div class="card-header">
+                    <div>
+                        <h2>Official Digital Classroom Notice Board</h2>
+                        <p class="section-desc">Notices cached via offline opportunistic store-and-forward peer hops.</p>
+                    </div>
+                    <div class="board-filters">
+                        <input type="text" id="searchFilter" placeholder="🔍 Search notices by keyword..." class="filter-input">
+                        <select id="priorityFilter" class="filter-select">
+                            <option value="ALL">All Priorities</option>
+                            <option value="Urgent">🔴 Urgent Only</option>
+                            <option value="Normal">🟢 Normal Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="notices-grid" id="studentNoticesContainer"></div>
+            </div>
+        </section>
+
+        <!-- TAB 4: PACKET INSPECTOR LOGS -->
+        <section id="tab-packets" class="tab-panel">
+            <div class="card packet-trace-card">
+                <div class="card-header">
+                    <div>
+                        <h2>Store-and-Forward Packet Transmission Trace</h2>
+                        <p class="section-desc">Deep-dive packet hop inspection log simulating Layer 3/4 ad-hoc telemetry.</p>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="clearPacketLogs()">Clear Logs</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="packet-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Packet ID</th>
+                                <th>Current Node</th>
+                                <th>Next Hop</th>
+                                <th>Action Taken</th>
+                                <th>Hop Count</th>
+                                <th>QoS / Priority</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="packetLogBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Notice Detail Modal -->
+    <div id="noticeModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="modalTitle">Notice Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toastNotification" class="toast-container" style="display: none;">
+        <div class="toast-icon" id="toastIcon">🔔</div>
+        <div class="toast-content">
+            <h4 id="toastTitle">New Notice Received</h4>
+            <p id="toastMessage">Delivered via Classroom C relay node.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
